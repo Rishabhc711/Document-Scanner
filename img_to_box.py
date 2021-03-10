@@ -5,10 +5,13 @@ import cv2
 import pytesseract
 
 
-heightImg = 640
-widthImg  = 480 
+
 pytesseract.pytesseract.tesseract_cmd = 'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
-img = cv2.imread('Images/20210114_230948.jpg')
+#img = cv2.imread('Images/test.jpg')
+img = cv2.imread("Images/20210114_230948.jpg")
+# heightImg = 640
+# widthImg  = 480
+heightImg , widthImg , _ = img.shape 
 img = cv2.resize(img, (widthImg, heightImg))
 print(img)
 cv2.imshow("input",img)
@@ -21,10 +24,10 @@ print(pytesseract.image_to_string(img))
 boxes = pytesseract.image_to_boxes(img)
 for b in boxes.splitlines():
     b=b.split(' ')
-    print(b)
+    #print(b)
     x,y,w,h=int(b[1]),int(b[2]),int(b[3]),int(b[4])
-    cv2.rectangle(img, (x,y), (x+w,y+h), (0,0,255), 2)
-
+    cv2.rectangle(img, (x,heightImg- y), (w,heightImg- h), (0,0,255), 2)
+    cv2.putText(img, b[0], (x, heightImg-y), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0,255,0),1)
 
 cv2.imshow("input",img)
 cv2.waitKey(0)
