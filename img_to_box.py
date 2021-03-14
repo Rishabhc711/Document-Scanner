@@ -7,7 +7,8 @@ import pytesseract
 
 
 pytesseract.pytesseract.tesseract_cmd = 'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
-#img = cv2.imread('Images/test.jpg')
+#
+# img = cv2.imread('Images/test.jpg')
 img = cv2.imread("Images/20210114_230948.jpg")
 # heightImg = 640
 # widthImg  = 480

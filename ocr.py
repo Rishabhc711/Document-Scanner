@@ -1,7 +1,7 @@
 import cv2
 import pytesseract
 
-
+# Image to String Code Snippet
 heightImg = 640
 widthImg  = 480 
 pytesseract.pytesseract.tesseract_cmd = 'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
