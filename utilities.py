@@ -1,32 +1,47 @@
-#import necessary modules/ libraries
-from  cv2 import cv2
+# utilities module
 import numpy as np
-#import utlis
- 
- 
-########################################################################
-# For Live Webcam feed
-webCamFeed = True
+from PIL import ImageGrab
+import time
+import cv2
+import pytesseract
 
-cap = cv2.VideoCapture(0)
-cap.set(10,160)
-heightImg = 640
-widthImg  = 480
-########################################################################
-# Filepath of Image 
-pathImage = "DOCSCANNER\\Images\\test1.jpeg" 
-#utlis.initializeTrackbars()
-
-count=0
 def nothing(x=0):
     pass
-    #cv2.imshow("Canny Image",ImageCanny)
 
-# Trackbars for Threshold 1 and 2
-cv2.namedWindow("Threshold Parameters")
-cv2.resizeWindow("Threshold Parameters",400,600)
-cv2.createTrackbar("Threshold 1","Threshold Parameters",60,255,nothing)
-cv2.createTrackbar("Threshold 2","Threshold Parameters",60,255,nothing)
+def webcamfeed(h,w,irh=640,irw=480):
+    # For Live Webcan feed
+    webCamFeed = True
+    cam = cv2.VideoCapture(0)
+    cam.set(cv2.CAP_PROP_FRAME_WIDTH,irw)
+    cam.set(cv2.CAP_PROP_FRAME_HEIGHT,irh)
+
+    img_counter = 0
+
+    while True:
+        ret, frame = cam.read()
+        if not ret:
+            print("failed to grab frame")
+            break
+        cv2.imshow("test", frame)
+
+        k = cv2.waitKey(1)
+        if k%256 == 27:
+            # ESC pressed
+            print("Escape hit, closing...")
+            break
+        elif k%256 == 32:
+            # SPACE pressed
+            img_name = "opencv_frame_{}.png".format(img_counter)
+            cv2.imwrite(img_name, frame)
+            print("{} written!".format(img_name))
+            img_counter += 1
+    cam.release()
+    return img_counter
+
+def captureScreen(bbox=(300,300,1500,1000)):
+    capScr = np.array(ImageGrab.grab(bbox))
+    capScr = cv2.cvtColor(capScr, cv2.COLOR_RGB2BGR)
+    return capScr
 
 # Function to get Biggest 4-sided contour 
 def getBiggestcontour(contours):
@@ -62,41 +77,23 @@ def unsharp_mask(image, kernel_size=(5, 5), sigma=1.0, amount=1.0, threshold=0):
         np.copyto(sharpened, image, where=low_contrast_mask)
     return sharpened
 
-while True:
-    #For Live Webcam feed, uncomment next line 
-    #if webCamFeed:success, img = cap.read()
-    #else:
-    img = cv2.imread(pathImage)
+def process(img, heightImg,widthImg):
     img = cv2.resize(img, (widthImg, heightImg)) # RESIZE IMAGE
     imgBlank = np.zeros((heightImg,widthImg, 3), np.uint8) # CREATE A BLANK IMAGE FOR TESTING DEBUGING IF REQUIRED
     imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) # CONVERT IMAGE TO GRAY SCALE
     imgBlur = cv2.GaussianBlur(imgGray, (5, 5), 1)
-    '''
-    cv2.imshow("Image1",img)
-    cv2.imshow("BLank Image",imgBlank)
-    cv2.imshow("Blurred Image",imgBlur)
-    cv2.waitKey()
-    '''
-    #To remove the previous image windows , uncomment next line
-    #cv2.destroyAllWindows()
-    
-    
+
     # Determining thresholds 1 and 2 and Applying Canny Edge Detection
-    th1=cv2.getTrackbarPos("Threshold1","Threshold Parameters")  # GET TRACK BAR VALUES FOR THRESHOLDS
+    # GET TRACK BAR VALUES FOR THRESHOLDS
+    th1=cv2.getTrackbarPos("Threshold1","Threshold Parameters")  
     th2=cv2.getTrackbarPos("Threshold2","Threshold Parameters")  
-    ImageCanny=cv2.Canny(imgBlur,th1,th2)    # APPLY CANNY BLUR
+    ImageCanny=cv2.Canny(imgBlur,th1,th2)
+    # APPLY CANNY BLUR
     cv2.imshow("Canny Image",ImageCanny)
     cv2.waitKey(0)
     kernel = np.ones((5, 5))
     imgDial = cv2.dilate(ImageCanny, kernel, iterations=2) # APPLY DILATION
     imgThreshold = cv2.erode(imgDial, kernel, iterations=1)  # APPLY EROSION
-    '''
-    cv2.imshow("Dilated",imgDial)
-    cv2.imshow("Eroded",imgThreshold)
-    cv2.waitKey()
-    '''
-    #To remove the previous image windows , uncomment next line
-    #cv2.destroyAllWindows()
     
     # Copies the original image for Contour detection
     imgcontour1=img.copy()
@@ -104,24 +101,19 @@ while True:
     big,maxarea=getBiggestcontour(contours1)
     cv2.drawContours(imgcontour1,big, -1,(0, 0,255),15) 
     cv2.imshow("Contours on Original Image found on Canny Image1", imgcontour1)
+    print(" Hey Luke!")
+    print(big)
     img=drawRectangle(imgcontour1,big,15)
     cv2.imshow("Contours on Original Image found on Canny Image2", img)
     cv2.waitKey(0)
-
-    # Copies the Original image for corner Detection
-    img_with_corners=img.copy()
-    corners = cv2.goodFeaturesToTrack(imgBlur, 4, 0.4, 50)
-    corners = np.int0(corners)
-    for corner in corners:
-        x, y = corner.ravel()
-        cv2.circle(img_with_corners, (x, y), 4, (200, 0, 255), -1)
-    cv2.imshow("Image With corners", img_with_corners)
 
     pts1 = np.float32(big) # PREPARE POINTS FOR WARP
     pts2 = np.float32([[widthImg, 0],[0, 0],[0, heightImg],[widthImg, heightImg]]) # PREPARE POINTS FOR WARP
     matrix = cv2.getPerspectiveTransform(pts1, pts2)
     imgWarpColored = cv2.warpPerspective(img, matrix, (widthImg, heightImg))
+    return imgWarpColored
 
+def adaptive_thresholding(imgWarpColored,heightImg,widthImg):
     #REMOVE 20 PIXELS FORM EACH SIDE
     imgWarpColored=imgWarpColored[20:imgWarpColored.shape[0] - 20, 20:imgWarpColored.shape[1] - 20]
     imgWarpColored = cv2.resize(imgWarpColored,(widthImg,heightImg))
@@ -157,13 +149,7 @@ while True:
     imgAdaptiveThre1 = cv2.bitwise_not(imgAdaptiveThre1)
     imgAdaptiveThre1=cv2.medianBlur(imgAdaptiveThre1,3)
     cv2.imshow("Warped Image With corners after adaptive theshold2", imgAdaptiveThre1)
-
-    if cv2.waitKey(0) & 0xFF == ord('s'):
-        break
-
-    
-    
-
-print(cv2.__version__)
-print('hi')
-cv2.destroyAllWindows()
+    print('end')
+    cv2.waitKey(0)
+    # if cv2.waitKey(0) & 0xFF == ord('s'):
+    #     break

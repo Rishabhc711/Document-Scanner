@@ -9,7 +9,7 @@ import pytesseract
 pytesseract.pytesseract.tesseract_cmd = 'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
 #
 # img = cv2.imread('Images/test.jpg')
-img = cv2.imread("Images/20210114_230948.jpg")
+img = cv2.imread("C:/Users/Rishabh/Desktop/Rishabh/Projects/Document-Scanner/opencv_frame_1.png")
 # heightImg = 640
 # widthImg  = 480
 heightImg , widthImg , _ = img.shape 
