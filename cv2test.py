@@ -14,7 +14,7 @@ heightImg = 640
 widthImg  = 480
 ########################################################################
 # Filepath of Image 
-pathImage = "DOCSCANNER\\Images\\test1.jpeg" 
+pathImage = "Images/test1.jpeg" 
 #utlis.initializeTrackbars()
 
 count=0
@@ -82,11 +82,13 @@ while True:
     
     
     # Determining thresholds 1 and 2 and Applying Canny Edge Detection
-    th1=cv2.getTrackbarPos("Threshold1","Threshold Parameters")  # GET TRACK BAR VALUES FOR THRESHOLDS
-    th2=cv2.getTrackbarPos("Threshold2","Threshold Parameters")  
-    ImageCanny=cv2.Canny(imgBlur,th1,th2)    # APPLY CANNY BLUR
-    cv2.imshow("Canny Image",ImageCanny)
-    cv2.waitKey(0)
+    while True:
+            th1=cv2.getTrackbarPos("Threshold1","Threshold Parameters")  # GET TRACK BAR VALUES FOR THRESHOLDS
+            th2=cv2.getTrackbarPos("Threshold2","Threshold Parameters")  
+            ImageCanny=cv2.Canny(imgBlur,th1,th2)    # APPLY CANNY BLUR
+            cv2.imshow("Canny Image",ImageCanny)
+            if cv2.waitKey(0) & 0xFF == ord('s'):
+                continue
     kernel = np.ones((5, 5))
     imgDial = cv2.dilate(ImageCanny, kernel, iterations=2) # APPLY DILATION
     imgThreshold = cv2.erode(imgDial, kernel, iterations=1)  # APPLY EROSION

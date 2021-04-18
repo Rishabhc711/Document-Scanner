@@ -32,4 +32,5 @@ cv2.createTrackbar("Threshold 1","Threshold Parameters",60,255,utilities.nothing
 cv2.createTrackbar("Threshold 2","Threshold Parameters",60,255,utilities.nothing)
 
 Warped_Img=utilities.process(img,heightImg, widthImg)
+print(1)
 utilities.adaptive_thresholding(Warped_Img,heightImg,widthImg)
